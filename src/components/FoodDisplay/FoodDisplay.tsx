@@ -1,13 +1,20 @@
-import { useContext } from "react"
+import { useContext, useEffect, useState } from "react"
 import { FoodItemType, StoreContext } from "../../context/StoreContext";
 import FoodItem from "../FoodItem/FoodItem";
 import './FoodDisplay.css'
+import axios from "axios";
 
 type FoodDisplayProps = {
     category: string;
 }
+
+
+
 const FoodDisplay : React.FC <FoodDisplayProps>= ({category}) => {
-  const contextData = useContext(StoreContext);  
+    const contextData = useContext(StoreContext);  
+
+    
+
   return (
     <div className="food-display" id="food-display">
         <h2>Top dishes near you</h2>

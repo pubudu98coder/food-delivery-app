@@ -19,7 +19,7 @@ const FoodItem: React.FC<FoodItemProps> = ({item}) => {
   return (
     <div className='food-item'>
         <div className="food-item-image-container">
-            <img src={item.image} alt="" className="food-item-image" />
+            <img src={`${'http://localhost:5000'}/images/${item.image}`} alt="" className="food-item-image" />
             {!cartItems[item._id]
                 ? <img src={assets.add_icon_white} alt="" className="add" onClick={()=>addToCart(item._id)}/>
                 : <div className="food-item-counter">
