@@ -3,14 +3,13 @@ import './MyOrders.css'
 import { StoreContext } from '../../context/StoreContext';
 import axios from 'axios';
 import { assets } from '../../assets/assets';
+import AuthContext from '../../context/AuthProvider';
 
 const MyOrders = () => {
     const [data, setData] = useState([]);
-    const context = useContext(StoreContext);
-    if (!context){
-        return
-    }
-    const {accessToken} =context;
+    const authContext = useContext(AuthContext);
+    if (!authContext) return;
+    const {auth} = authContext;
 
     const fetchOrders = async () => {
         try {
@@ -19,7 +18,7 @@ const MyOrders = () => {
                 {},
                 {
                     headers:{
-                        Authorization: `Bearer ${accessToken}`
+                        Authorization: `Bearer ${auth?.accessToken}`
                     }
                 }
             );
@@ -31,10 +30,10 @@ const MyOrders = () => {
     }
 
     useEffect(()=>{
-        if (accessToken) {
+        if (auth?.accessToken) {
             fetchOrders();
         }
-    }, [accessToken]);
+    }, [auth?.accessToken]);
 
   return (
     <div className='my-orders'>
