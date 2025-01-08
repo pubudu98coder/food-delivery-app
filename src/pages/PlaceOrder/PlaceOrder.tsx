@@ -3,13 +3,19 @@ import './PlaceOrder.css'
 import { StoreContext } from '../../context/StoreContext';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import AuthContext from '../../context/AuthProvider';
 
 const PlaceOrder = () => {
+	//accessing stordContext
 	const context = useContext(StoreContext);
-	if (!context) {
-		return
-	}
-	const { getTotalAmount, foodList, cartItems, accessToken } = context;
+	if (!context) return;
+	const { getTotalAmount, foodList, cartItems} = context;
+	//accessing authcontext
+	const authContext = useContext(AuthContext);
+	if (!authContext) return;
+	const {auth} = authContext;
+
+
 	const [data, setData] = useState({
 		firstName: '',
 		lastName: '',
@@ -57,7 +63,7 @@ const PlaceOrder = () => {
 		try {
 			let response = await axios.post(`${import.meta.env.VITE_API_URL}/order/place`, orderData, {
 				headers:{
-					Authorization:`Bearer ${accessToken}`
+					Authorization:`Bearer ${auth?.accessToken}`
 				}}
 			);
 			console.log("dgf", response);
@@ -76,12 +82,12 @@ const PlaceOrder = () => {
 	}
 
 	useEffect(()=>{
-		if (!accessToken) {
+		if (!auth?.accessToken) {
 			navigate('/cart')
 		} else if (getTotalAmount() === 0) {
 			navigate('/cart');
 		} 
-	}, [accessToken]);
+	}, [auth?.accessToken]);
 
 	return (
 		<form onSubmit={placeOrder} action="" className="place-order">

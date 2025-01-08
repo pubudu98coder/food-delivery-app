@@ -3,41 +3,44 @@ import { assets } from "../../assets/assets";
 import './Navbar.css'
 import { Link, useNavigate } from "react-router-dom";
 import { StoreContext } from "../../context/StoreContext";
-import axios from "axios";
+import axios from '../../api/axios';
 import { toast } from "react-toastify";
+import AuthContext from "../../context/AuthProvider";
 
 type NavBarProps = {
     setShowLogin: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 const NavBar: React.FC<NavBarProps> = ({ setShowLogin }) => {
-    const URL=`${import.meta.env.VITE_API_URL}/user`;
     const [menu, setMenu] = useState("home");
     const context = useContext(StoreContext);
+    if (!context) return ;
+    const {getTotalAmount} = context;
 
-    if (!context){
-        return 
-    }
-
-    const {getTotalAmount, accessToken, setAccessToken} = context;
-    console.log(accessToken);
+    const authContext = useContext(AuthContext);
+    if (!authContext) return;
+    const {auth, setAuth} = authContext;
     const navigate = useNavigate();
+    const INIT_AUTH = {
+        userId: "",
+        accessToken: "",
+        roleList: []
+    }
 
     const logOut = async () => {
         try {
-            const response = await axios.post(`${URL}/logout`,{}, {withCredentials:true});
-            console.log("success",response?.data?.success)
-            if (response?.data.success){
+            const response = await axios.post(`/user/logout`,{}, {withCredentials:true});
+            console.log("success",response.status)
+            if ( response.status===204|| response?.data.success ){
                 localStorage.removeItem("accessToken");
-                setAccessToken("");
+                toast.success("logout successfully");
+                setAuth(INIT_AUTH);
                 navigate("/");    
             }
             
         } catch (error:any) {
             toast.error(error.response.message)
         }
-        
-
     }
 
     return (
@@ -55,7 +58,7 @@ const NavBar: React.FC<NavBarProps> = ({ setShowLogin }) => {
                     <Link to='/cart'> <img src={assets.basket_icon} alt="" /> </Link>
                     <div className={getTotalAmount()===0? "": "dot" }></div>
                 </div>
-                {!accessToken
+                {!auth?.accessToken
                     ?<button onClick={() => setShowLogin(true)}>Sign in</button> 
                     :<div className="navbar-profile">
                         <img src={assets.profile_icon} alt="" />

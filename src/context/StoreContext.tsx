@@ -1,6 +1,7 @@
-import React, { createContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { food_list } from "../assets/assets";
 import axios from "axios";
+import AuthContext from "./AuthProvider";
 
 export interface FoodItemType {
     _id: string;
@@ -18,8 +19,6 @@ interface contextType {
     setCartItems: React.Dispatch<React.SetStateAction<CartItems>>;
     removeFromCart: (itemId: string) => void
     getTotalAmount: () => number
-    accessToken: string
-    setAccessToken: React.Dispatch<React.SetStateAction<string>>
 }
 
 type CartItems = {
@@ -32,9 +31,11 @@ export const StoreContext = createContext<contextType | undefined>(undefined);
 export const StoreContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
     const [cartItems, setCartItems] = useState<CartItems>({});
-    const [accessToken, setAccessToken] = useState('');
+    //const [accessToken, setAccessToken] = useState('');
     const [foodList, setFoodList] = useState<FoodItemType[]>([]);
-
+    const authContext = useContext(AuthContext);
+    if (! authContext) return ;
+    const {auth, setAuth} = authContext;
 
 
     const addToCart = async (itemId: string) => {
@@ -48,13 +49,13 @@ export const StoreContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
             }
         );
 
-        if (accessToken) {
+        if (auth?.accessToken) {
             try {
                 await axios.post(
                     `${import.meta.env.VITE_API_URL}/cart/add`,
                     { itemId },
                     { headers: {
-                         Authorization:`Bearer ${accessToken}` } 
+                         Authorization:`Bearer ${auth?.accessToken}` } 
                     }
                 );
             } catch (error) {
@@ -76,12 +77,12 @@ export const StoreContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
         });
 
         try {
-            if (accessToken) {
+            if (auth?.accessToken) {
                 await axios.post(
                     `${import.meta.env.VITE_API_URL}/cart/remove`, 
                     {itemId}, 
                     { headers: {
-                        Authorization:`Bearer ${accessToken}` } 
+                        Authorization:`Bearer ${auth?.accessToken}` } 
                     }
                 );
             }
@@ -142,9 +143,7 @@ export const StoreContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
         cartItems: cartItems,
         setCartItems: setCartItems,
         removeFromCart: removeFromCart,
-        getTotalAmount: getTotalAmount,
-        accessToken: accessToken,
-        setAccessToken: setAccessToken
+        getTotalAmount: getTotalAmount
     }
 
     useEffect(() => {
@@ -158,7 +157,10 @@ export const StoreContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
             const localToken = localStorage.getItem("accessToken");
             console.log("local token",localToken)
             if (localToken) {
-                setAccessToken(localToken);
+                setAuth((prev) => {
+                    if (prev?.accessToken === localToken) return prev; 
+                    return { ...prev, accessToken: localToken };
+                  });
                 await loadCartData(localToken);
             }
             

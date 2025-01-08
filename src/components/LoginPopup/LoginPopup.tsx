@@ -1,15 +1,15 @@
 import { useContext, useEffect, useState } from 'react'
 import { assets } from '../../assets/assets'
 import './LoginPopup.css'
-import axios from 'axios';
+import axios from '../../api/axios';
 import { StoreContext } from '../../context/StoreContext';
-import {toast} from 'react-toastify'; 
+import {toast} from 'react-toastify';
+import AuthContext from '../../context/AuthProvider'; 
 
 type LoginPopupProps = {
 	setShowLogin: React.Dispatch<React.SetStateAction<boolean>>;
 }
 const LoginPopup: React.FC<LoginPopupProps> = ({ setShowLogin }) => {
-	const URL=`${import.meta.env.VITE_API_URL}/user`;
 	const [currentState, setCurrentState] = useState("Sign up");
 	const [userData, setUserData] = useState({
 		name: '',
@@ -18,10 +18,12 @@ const LoginPopup: React.FC<LoginPopupProps> = ({ setShowLogin }) => {
 	});
 
 	const context = useContext(StoreContext);
-	if (!context) {
-		return;
-	}
-	const {setAccessToken} = context;
+	if (!context) return;
+
+	const authContext = useContext(AuthContext);
+	if (!authContext) return;
+	const {setAuth} = authContext;
+
 
 	const handleChange = (e: any) => {
 		const name = e.target.name;
@@ -35,20 +37,32 @@ const LoginPopup: React.FC<LoginPopupProps> = ({ setShowLogin }) => {
 	const handleLogin = async (e: any) =>{
 		console.log("Clicked");
 		e.preventDefault();
-		let url = `${URL}/${currentState==="Login"?'login': 'register'}`
+		let url = `/user/${currentState==="Login"?'login': 'register'}`
 		try{
 			const response = await axios.post(url, userData,{withCredentials:true});
 			console.log(response);
-			if (response.data?.success) {
-				setAccessToken(response.data.accessToken);
-				localStorage.setItem("accessToken",response.data.accessToken);
+			if (response?.data?.success) {
+				console.log(response?.data)
+				const accessToken = response?.data?.accessToken;
+				const roleList = response?.data?.roleList;
+				const userId =response?.data?.userId;
+				
+				setAuth({accessToken,userId,roleList })
+				localStorage.setItem("accessToken",accessToken);
 				setShowLogin(false);
 				toast.success(response.data.message);
 			}
 		} catch (error:any) {
-			toast.error(error.response.data.message);
+			if (error.response) {
+				toast.error(error.response?.data?.message);
+			} else {
+				toast.error("No server response");
+			}
+				
 		}
 	}
+
+	console.log("Authcontext", authContext);
 
 	return (
 		<div className='login-popup'>
